@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadEase - Modern Look</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #title {
+            font-size: 3em;
+            font-weight: 700;
+            color: #2d2d2d;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #video {
+            display: block;
+            width: 60%;
+            max-width: 480px;
+            margin: 0 auto 20px;
+            border: 3px solid #d9d9d9;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #capture {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        #capture:hover {
+            background-color: #0056b3;
+        }
+
+        #captured_image {
+            display: block;
+            max-width: 300px;
+            margin: 20px auto;
+            border: 3px solid #d9d9d9;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #extracted_text {
+            width: 80%;
+            max-width: 800px;
+            height: 150px;
+            background: #ffffff;
+            border: 2px solid #d9d9d9;
+            padding: 15px;
+            margin: 20px auto;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            border-radius: 10px;
+        }
+
+        #read_text {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        #read_text:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">ReadEase - Text Recognition & Speech</div>
+    <video id="video" autoplay></video>
+    <button id="capture">Capture Image</button>
+    <img id="captured_image" style="display: none;">
+    <div id="extracted_text">Extracted text will appear here.</div>
+    <button id="read_text" style="display: none;">Read Text Aloud</button>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.createElement('canvas');
+        const captureButton = document.getElementById('capture');
+        const capturedImage = document.getElementById('captured_image');
+        const extractedTextDiv = document.getElementById('extracted_text');
+        const readTextButton = document.getElementById('read_text');
+
+        // Access the user's webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                video.srcObject = stream;
+            })
+            .catch(function(err) {
+                console.log("An error occurred: " + err);
+            });
+
+        // Capture the image from the webcam
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+            const dataURL = canvas.toDataURL('image/png');
+            capturedImage.src = dataURL;
+            capturedImage.style.display = 'block';
+
+            // Send the captured image to the Flask backend for OCR
+            fetch('/process_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataURL })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    extractedTextDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                } else {
+                    extractedTextDiv.innerHTML = `<p><strong>Extracted Text:</strong> ${data.extracted_text}</p>`;
+                    readTextButton.style.display = 'inline-block';
+                }
+            })
+            .catch(error => {
+                extractedTextDiv.innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+            });
+        });
+
+        // Read the extracted text aloud
+        readTextButton.addEventListener('click', () => {
+            const extractedText = extractedTextDiv.innerText.replace('Extracted Text: ', '');
+            fetch('/read_text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: extractedText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    extractedTextDiv.innerHTML += `<p style="color: red;">Error: ${data.error}</p>`;
+                } else {
+                    const audio = new Audio(data.audio_path);
+                    audio.play();
+                }
+            })
+            .catch(error => {
+                extractedTextDiv.innerHTML += `<p style="color: red;">Error: ${error}</p>`;
+            });
+        });
+    </script>
+</body>
+</html>
