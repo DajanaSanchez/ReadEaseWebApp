@@ -17,8 +17,9 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            box-sizing: border-box;
         }
-
+    
         #title {
             font-size: 3em;
             font-weight: 700;
@@ -26,7 +27,7 @@
             text-align: center;
             margin-bottom: 20px;
         }
-
+    
         #video {
             display: block;
             width: 60%;
@@ -36,7 +37,7 @@
             border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         }
-
+    
         #capture {
             background-color: #007bff;
             color: #fff;
@@ -50,11 +51,11 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: background-color 0.3s ease;
         }
-
+    
         #capture:hover {
             background-color: #0056b3;
         }
-
+    
         #captured_image {
             display: block;
             max-width: 300px;
@@ -63,11 +64,13 @@
             border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         }
-
+    
         #extracted_text {
             width: 80%;
             max-width: 800px;
-            height: 150px;
+            height: auto;
+            min-height: 150px;
+            max-height: 50vh; /* Make it dynamic based on the viewport height */
             background: #ffffff;
             border: 2px solid #d9d9d9;
             padding: 15px;
@@ -75,8 +78,9 @@
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
             overflow-y: auto;
             border-radius: 10px;
+            transition: all 0.3s ease; /* Smooth transition for resizing */
         }
-
+    
         #read_text {
             background-color: #28a745;
             color: #fff;
@@ -90,11 +94,12 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: background-color 0.3s ease;
         }
-
+    
         #read_text:hover {
             background-color: #218838;
         }
     </style>
+    
 </head>
 <body>
     <div id="title">ReadEase - Text Recognition & Speech</div>
