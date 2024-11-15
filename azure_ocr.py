@@ -2,7 +2,6 @@
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
 import os
-import certifi
 
 
 class AzureOCR:
